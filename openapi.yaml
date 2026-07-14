@@ -1,0 +1,9 @@
+openapi: 3.0.0
+info:
+  title: API MiniBlog
+  version: 1.0.0
+  description: API REST para gestão de authors e posts (Projeto Integrador).
+paths:
+  # TODO (Passo 9): documentar cada endpoint (/authors, /authors/{id}, /posts, ...)
+  # com seus métodos, parâmetros, request/response bodies e status codes.
+  {}

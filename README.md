@@ -8,6 +8,32 @@ Stack: Node.js + Express + PostgreSQL (`pg`) + Supertest + OpenAPI + deploy no R
 
 ---
 
+## Configuração local (`.env`)
+
+O projeto lê a configuração do banco por variáveis de ambiente (nunca hardcoded).
+Copie o `.env.example` para `.env` e preencha com os valores do seu Postgres local:
+
+```bash
+cp .env.example .env
+```
+
+| Variável | Para que serve | Exemplo |
+|---|---|---|
+| `PORT` | Porta em que o Express sobe | `3000` |
+| `DB_HOST` | Host do Postgres | `localhost` |
+| `DB_PORT` | Porta do Postgres | `5432` |
+| `DB_NAME` | Nome do banco/database | `miniblogapi` |
+| `DB_USER` | Usuário do Postgres | `postgres` |
+| `DB_PASSWORD` | Senha do Postgres | `sua_senha_local` |
+| `DB_MAX_CONNECT` | Máximo de conexões simultâneas do pool (`pg.Pool`) | `20` |
+| `DB_IDLETIMEOUT` | Tempo (ms) que uma conexão ociosa fica aberta antes de fechar | `30000` |
+| `DB_CONNECTIONTIMEOUT` | Tempo (ms) que o pool espera por uma conexão livre antes de desistir | `2000` |
+
+O `.env` **nunca** é commitado (está no `.gitignore`) — só o `.env.example`, com as chaves vazias,
+serve de referência pra quem for rodar o projeto.
+
+---
+
 ## Passo 1 — Entender o domínio antes de escrever qualquer código
 
 Antes de tocar no teclado, responda por escrito (pode ser aqui embaixo, num bloco de
@@ -35,24 +61,27 @@ Defina (e crie vazio, só com arquivos `.gitkeep` ou um comentário) a estrutura
 ```
 miniBlogAPI/
 ├── src/
-│   ├── db/          # conexão com o Postgres (pool de conexão)
-│   ├── routes/       # define os endpoints (o "o quê" da URL)
-│   ├── services/     # lógica de negócio + queries SQL
-│   ├── middlewares/   # tratamento de erros, validações
-│   └── app.js        # monta o Express e os middlewares
+│   ├── db/            # conexão com o Postgres (pool de conexão)
+│   ├── routes/        # define os endpoints (o "o quê" da URL)
+│   ├── controllers/   # lê req/res, chama o service, decide o status code
+│   ├── services/      # lógica de negócio + queries SQL
+│   ├── middlewares/    # tratamento de erros, validações
+│   └── app.js         # monta o Express e os middlewares
 ├── sql/
-│   ├── setup.sql     # CREATE TABLE
-│   └── seed.sql       # INSERT de dados de exemplo
+│   ├── setup.sql      # CREATE TABLE
+│   └── seed.sql        # INSERT de dados de exemplo
 ├── tests/
-├── index.js           # só sobe o servidor (require de app.js)
+├── index.js            # só sobe o servidor (require de app.js)
 ├── openapi.yaml
 ├── .env.example
 └── README.md
 ```
 
-**Por quê separar `routes` de `services`**: rota decide "qual URL/verbo dispara o quê";
-service decide "o que fazer com os dados". Isso facilita testar a lógica sem precisar
-subir um servidor HTTP.
+**Por quê separar `routes` de `controllers` de `services`**: a rota só decide "qual
+URL/verbo dispara o quê" e delega pro controller; o **controller** lida com HTTP
+(`req`, `res`, status code) e chama o service; o **service** não sabe nada de HTTP —
+só lógica de negócio e queries SQL. Isso facilita testar a lógica (o service) sem
+precisar simular requisições HTTP.
 
 **Critério para avançar**: as pastas existem e você consegue explicar em uma frase o
 papel de cada uma.
@@ -85,8 +114,11 @@ resultado de cada um.
 ## Passo 4 — Endpoints com dados em memória (arrays), sem banco ainda
 
 Implemente as rotas de `authors` e `posts` usando arrays em JS (como no exemplo da
-guia), sem nenhuma conexão com banco. Objetivo: validar a "forma" da API — verbos HTTP,
-status codes, formato do JSON de resposta — isoladamente de qualquer problema de banco.
+guia), sem nenhuma conexão com banco. Já monte o fluxo completo `routes → controllers →
+services`, mesmo que o "service" ainda seja só um array em memória: a rota chama o
+controller, o controller chama o service e devolve a resposta. Objetivo: validar a
+"forma" da API — verbos HTTP, status codes, formato do JSON de resposta — isoladamente
+de qualquer problema de banco.
 
 Endpoints mínimos:
 ```
@@ -135,8 +167,10 @@ importar o pool e imprimir o resultado de um `SELECT NOW()`.
 ## Passo 6 — Trocar os arrays por queries SQL reais
 
 Agora, um endpoint de cada vez, substitua o array pela query correspondente no
-`service`. Use sempre **placeholders parametrizados** (`$1`, `$2`, ...) — nunca
-concatenação de string na query, isso é o que evita SQL injection.
+`service` (o `controller` não muda nada aqui — ele continua só chamando o service,
+sem saber se por trás tem um array ou o Postgres). Use sempre **placeholders
+parametrizados** (`$1`, `$2`, ...) — nunca concatenação de string na query, isso é o
+que evita SQL injection.
 
 Ordem sugerida (do mais simples ao mais dependente):
 1. `GET /authors` e `GET /authors/:id`
@@ -228,3 +262,240 @@ A consigna pede para documentar o uso de IA no projeto. Mantenha aqui uma lista 
 prompts que você usou e como cada resposta influenciou (ou não) as suas decisões —
 por exemplo, se pediu ajuda para debugar um erro específico, ou para revisar uma
 query, registre o que perguntou e o que você decidiu fazer com a resposta.
+
+---
+
+# Anexo — Guía para el desarrollo del Proyecto Integrador 2
+
+> Material original do professor, mantido aqui como referência. Não substitui a
+> consigna oficial nem o roteiro de passos acima — é só uma fonte de exemplos prontos
+> (SQL, arrays) caso você queira comparar com o que já escreveu.
+
+## Propósito de esta guía
+
+Esta guía tiene como objetivo acompañarte en la implementación técnica del backend
+del Proyecto Integrador.
+
+No reemplaza la consigna oficial ni define una única forma de resolver el proyecto.
+Su función es orientarte con ejemplos concretos de estructura, scripts SQL y datos
+iniciales que puedes utilizar como referencia para organizar tu desarrollo.
+
+El foco está en ayudarte a construir una API REST funcional, bien estructurada y
+correctamente conectada a PostgreSQL.
+
+## Qué se espera del proyecto
+
+Se espera que desarrolles una API REST en Node.js + Express que:
+
+- Implemente operaciones CRUD para las entidades `authors` y `posts`.
+- Persista los datos en PostgreSQL.
+- Maneje validaciones básicas y errores.
+- Incluya documentación mínima y tests automatizados.
+
+Más allá de la cantidad de funcionalidades, se valorará especialmente:
+
+- Que los endpoints funcionen correctamente.
+- Que la conexión con la base de datos esté bien configurada.
+- Que las consultas SQL estén parametrizadas.
+- Que el proyecto esté correctamente versionado.
+- Que la documentación permita ejecutar el proyecto sin ayuda externa.
+
+## Cómo encarar el desarrollo
+
+**Antes de escribir código:**
+
+1. Lee la consigna completa.
+2. Identifica las entidades y relaciones (`authors` → `posts`).
+3. Define una estructura simple de carpetas (`routes`, `services`, `db`, `middlewares`).
+4. Decide qué endpoints implementarás primero.
+5. Prepara tu script de base de datos antes de conectar Express.
+
+**Durante el desarrollo**, se recomienda avanzar en este orden lógico:
+
+1. Crear el script SQL de setup y seed.
+2. Probar las tablas directamente en PostgreSQL.
+3. Crear los endpoints con datos en memoria (arrays).
+4. Conectar la aplicación a PostgreSQL usando `pg`.
+5. Reemplazar los arrays por consultas reales a la base de datos.
+6. Agregar validaciones y middleware de manejo de errores.
+7. Incorporar tests.
+8. Documentar con OpenAPI.
+9. Preparar el deployment.
+
+Prueba los endpoints frecuentemente con herramientas como Postman o Thunder Client.
+Realiza commits pequeños y descriptivos.
+
+## Ejemplo de script setup y seed (.sql)
+
+Puedes utilizar el siguiente ejemplo como base para tu archivo de inicialización de
+base de datos.
+
+```sql
+CREATE TABLE authors (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) UNIQUE NOT NULL,
+  bio TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  content TEXT NOT NULL,
+  author_id INTEGER NOT NULL,
+  published BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
+);
+```
+
+**Datos de ejemplo (seed):**
+
+```sql
+INSERT INTO authors (name, email, bio) VALUES
+  ('Ana García', 'ana@example.com', 'Desarrolladora full-stack apasionada por Node.js'),
+  ('Carlos Ruiz', 'carlos@example.com', 'Escritor técnico especializado en bases de datos'),
+  ('María López', 'maria@example.com', 'Ingeniera de software con foco en APIs REST');
+
+INSERT INTO posts (title, content, author_id, published) VALUES
+  ('Introducción a Node.js', 'Node.js es un runtime de JavaScript...', 1, true),
+  ('PostgreSQL vs MySQL', 'Ambas bases de datos tienen ventajas...', 2, true),
+  ('APIs RESTful', 'REST es un estilo arquitectónico...', 1, true),
+  ('Manejo de errores en Express', 'El manejo apropiado de errores...', 3, false),
+  ('Async/Await explicado', 'Las promesas simplifican el código asíncrono...', 1, false);
+```
+
+Antes de conectar tu aplicación, verifica que:
+
+- Las tablas se crearon correctamente.
+- Las claves foráneas funcionan.
+- Puedes ejecutar consultas CRUD manualmente.
+
+## Arrays en memoria para pruebas iniciales
+
+Antes de conectar PostgreSQL, puedes crear tus endpoints usando datos en memoria.
+Esto te permitirá validar la lógica HTTP sin depender aún de la base de datos.
+
+**Ejemplo `authors`:**
+
+```js
+let authors = [
+  {
+    id: 1,
+    name: 'Ana García',
+    email: 'ana@example.com',
+    bio: 'Desarrolladora full-stack apasionada por Node.js'
+  },
+  {
+    id: 2,
+    name: 'Carlos Ruiz',
+    email: 'carlos@example.com',
+    bio: 'Escritor técnico especializado en bases de datos'
+  },
+  {
+    id: 3,
+    name: 'María López',
+    email: 'maria@example.com',
+    bio: 'Ingeniera de software con foco en APIs REST'
+  }
+];
+```
+
+**Ejemplo `posts`:**
+
+```js
+let posts = [
+  {
+    id: 1,
+    title: 'Introducción a Node.js',
+    content: 'Node.js es un runtime de JavaScript...',
+    author_id: 1,
+    published: true
+  },
+  {
+    id: 2,
+    title: 'PostgreSQL vs MySQL',
+    content: 'Ambas bases de datos tienen ventajas...',
+    author_id: 2,
+    published: true
+  },
+  {
+    id: 3,
+    title: 'APIs RESTful',
+    content: 'REST es un estilo arquitectónico...',
+    author_id: 1,
+    published: true
+  },
+  {
+    id: 4,
+    title: 'Manejo de errores en Express',
+    content: 'El manejo apropiado de errores...',
+    author_id: 3,
+    published: false
+  },
+  {
+    id: 5,
+    title: 'Async/Await explicado',
+    content: 'Las promesas simplifican el código asíncrono...',
+    author_id: 3,
+    published: false
+  }
+];
+```
+
+Una vez que tu API funcione con estos arrays, podrás reemplazar la lógica por
+consultas SQL reales.
+
+## Buenas prácticas recomendadas
+
+**Arquitectura:**
+- Separa rutas (`routes`) de lógica de negocio (`services`).
+- Centraliza la conexión a la base de datos.
+- Implementa un middleware global de manejo de errores.
+
+**SQL:**
+- Usa consultas parametrizadas (`$1`, `$2`, etc.).
+- No concatenes strings para construir queries.
+- Maneja correctamente los casos donde no hay resultados (404).
+
+**Validaciones:**
+- Verifica campos obligatorios.
+- Controla que el email sea único.
+- Retorna códigos HTTP adecuados (400, 404, 201, etc.).
+
+**Tests:**
+- Cubre al menos: crear author, obtener author, crear post, eliminar recurso
+  inexistente.
+- Usa supertest para testear endpoints HTTP.
+
+**Git:**
+- No subas tu archivo `.env`.
+- Incluye un `.env.example`.
+- Mantén el repositorio público.
+
+## Errores comunes a evitar
+
+- Conectar Express a PostgreSQL sin haber probado el script SQL primero.
+- No manejar errores de base de datos.
+- No validar inputs antes de hacer la consulta.
+- Responder siempre 200 aunque haya errores.
+- No documentar cómo ejecutar el proyecto.
+
+## Sobre el uso de IA
+
+Puedes utilizar herramientas de IA como apoyo, siguiendo lo aprendido en el módulo,
+debes documentar los prompts utilizados y explicar cómo influyeron en el desarrollo
+del proyecto.
+
+## Cierre
+
+Esta guía está pensada para ayudarte a organizar tu implementación técnica y evitar
+errores frecuentes en proyectos backend.
+
+El objetivo final es que puedas demostrar que:
+
+- Comprendes cómo construir una API REST.
+- Sabes modelar y consultar una base de datos relacional.
+- Puedes estructurar un proyecto Node.js de manera profesional.
+- Eres capaz de entregar un backend funcional, documentado y desplegado.

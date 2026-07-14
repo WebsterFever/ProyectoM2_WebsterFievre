@@ -1,14 +1,23 @@
-const express = require('express');
+const { pool } = require('./src/config/dbConnect');
+const { initializeDatabase } = require('./src/config/initDb');
+const app = require('./src/app');
 
-const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+const startServer = async () => {
+  await pool.query('SELECT 1');
+  console.log('Conexão com PostgreSQL bem-sucedida');
+  await initializeDatabase();
+  console.log('Tabelas verificadas/criadas com sucesso');
+};
 
-app.get('/', (req, res) => {
-  res.send('miniBlogAPI is running');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+startServer()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Falha ao conectar no PostgreSQL:', err.message);
+    process.exit(1);
+  });
