@@ -6,7 +6,7 @@ const rateLimiter = rateLimit({
   skip: (req) => req.method !== 'GET' && req.method !== 'POST',
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests, please try again in 30 minutes' },
+  message: { error: 'Tooo  many many requests, please try again in 30 minutes' },
 });
 
 module.exports = rateLimiter;
