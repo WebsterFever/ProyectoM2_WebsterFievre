@@ -34,6 +34,66 @@ serve de referência pra quem for rodar o projeto.
 
 ---
 
+## Como rodar localmente
+
+1. Instale as dependências:
+   ```bash
+   npm install
+   ```
+2. Configure o `.env` (veja a seção acima).
+3. Suba o servidor:
+   ```bash
+   npm run dev    # com reload automático (nodemon)
+   # ou
+   npm start      # sem reload
+   ```
+   Na primeira execução o servidor confirma a conexão com o Postgres e cria as tabelas
+   `authors`/`posts` automaticamente, se ainda não existirem (`src/config/initDb.js`).
+   O `sql/setup.sql` faz a mesma coisa e serve de referência caso prefira rodar manualmente.
+4. A API sobe em `http://localhost:3000`.
+
+## Como rodar os testes
+
+```bash
+npm test
+```
+
+Roda a suíte com Vitest, que inclui:
+- **Testes unitários** dos middlewares de validação (`tests/validate*.test.js`) — não
+  dependem de banco de dados nem do servidor HTTP.
+- **Testes de integração** com Supertest (`tests/*.integration.test.js`) — sobem a
+  aplicação Express de verdade e usam o Postgres configurado no `.env`. Eles limpam os
+  dados que criam ao final (`afterAll`) e usam valores únicos (ex: email com timestamp),
+  então rodar `npm test` várias vezes seguidas não quebra por dados duplicados.
+
+## Documentação OpenAPI
+
+Com o servidor rodando, acesse **`http://localhost:3000/docs`** para a documentação
+interativa (Swagger UI), gerada a partir da spec definida em `src/config/swagger.js`
+(objeto `swaggerSpec` no formato OpenAPI 3.0).
+
+## Deploy no Railway
+
+1. Crie uma conta em [railway.app](https://railway.app) e um novo projeto.
+2. Adicione um serviço **PostgreSQL** ao projeto — o Railway provisiona o banco
+   automaticamente e expõe suas próprias variáveis de conexão.
+3. Adicione um segundo serviço a partir do repositório GitHub do miniBlogAPI (deploy via
+   Git).
+4. No serviço da API, configure as variáveis de ambiente `DB_HOST`, `DB_PORT`,
+   `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_MAX_CONNECT`, `DB_IDLETIMEOUT` e
+   `DB_CONNECTIONTIMEOUT`:
+   - Use a **internal URL**/variáveis do serviço Postgres do Railway (ele disponibiliza
+     `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` — referencie-as ou copie os
+     valores para as variáveis que o projeto espera).
+   - Não defina `PORT` manualmente: o Railway injeta a sua própria porta e o
+     `index.js` já usa `process.env.PORT`.
+5. O Railway builda e executa `npm start` automaticamente a partir do `package.json`.
+6. Depois do deploy, pegue a **public URL** gerada pelo Railway (Settings → Networking)
+   e teste os endpoints, ex: `https://seu-projeto.up.railway.app/authors` e
+   `https://seu-projeto.up.railway.app/docs`.
+
+---
+
 ## Passo 1 — Entender o domínio antes de escrever qualquer código
 
 Antes de tocar no teclado, responda por escrito (pode ser aqui embaixo, num bloco de
@@ -72,7 +132,6 @@ miniBlogAPI/
 │   └── seed.sql        # INSERT de dados de exemplo
 ├── tests/
 ├── index.js            # só sobe o servidor (require de app.js)
-├── openapi.yaml
 ├── .env.example
 └── README.md
 ```
@@ -230,8 +289,8 @@ duplicados do teste anterior — pense em como limpar o estado entre execuções
 
 ## Passo 9 — Documentação, `.env.example` e deploy no Railway
 
-- Escreva `openapi.yaml` descrevendo os endpoints (pode usar o Swagger Editor online
-  para validar a sintaxe).
+- Documente os endpoints em formato OpenAPI 3.0 (spec definida como objeto JS em
+  `src/config/swagger.js`, servida via Swagger UI em `/docs`).
 - Crie `.env.example` com as chaves (sem valores reais) que a aplicação espera.
 - Atualize o `README.md` principal com: como rodar localmente, como rodar os testes,
   como visualizar a doc OpenAPI, e o passo a passo do deploy no Railway (variáveis de
