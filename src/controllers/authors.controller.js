@@ -12,7 +12,6 @@ async function listAuthors(req, res, next) {
 async function getAuthorById(req, res, next) {
   try {
     const author = await authorsService.findById(req.params.id);
-    if (!author) return res.status(404).json({ error: 'Author not found' });
     res.status(200).json(author);
   } catch (err) {
     next(err);

@@ -7,6 +7,13 @@ async function findAll() {
 
 async function findById(id) {
   const { rows } = await pool.query('SELECT * FROM authors WHERE id = $1', [id]);
+
+  if (rows.length === 0) {
+    const error = new Error('Author not found');
+    error.status = 404;
+    throw error;
+  }
+
   return rows[0];
 }
 
