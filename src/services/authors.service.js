@@ -1,37 +1,39 @@
-let authors = [
-  { id: 1, name: 'Ana García', email: 'ana@example.com', bio: 'Desenvolvedora full-stack apaixonada por Node.js' },
-  { id: 2, name: 'Carlos Ruiz', email: 'carlos@example.com', bio: 'Escritor técnico especializado em bancos de dados' },
-];
-let nextId = 3;
+const { pool } = require('../config/dbConnect');
 
-function findAll() {
-  return authors;
+async function findAll() {
+  const { rows } = await pool.query('SELECT * FROM authors ORDER BY id');
+  return rows;
 }
 
-function findById(id) {
-  return authors.find((author) => author.id === Number(id));
+async function findById(id) {
+  const { rows } = await pool.query('SELECT * FROM authors WHERE id = $1', [id]);
+  return rows[0];
 }
 
-function create({ name, email, bio }) {
-  const newAuthor = { id: nextId++, name, email, bio };
-  authors.push(newAuthor);
-  return newAuthor;
+async function create({ name, email, bio }) {
+  const { rows } = await pool.query(
+    'INSERT INTO authors (name, email, bio) VALUES ($1, $2, $3) RETURNING *',
+    [name, email, bio]
+  );
+  return rows[0];
 }
 
-function update(id, { name, email, bio }) {
-  const author = findById(id);
-  if (!author) return null;
-  if (name !== undefined) author.name = name;
-  if (email !== undefined) author.email = email;
-  if (bio !== undefined) author.bio = bio;
-  return author;
+async function update(id, { name, email, bio }) {
+  const { rows } = await pool.query(
+    `UPDATE authors SET
+       name = COALESCE($1, name),
+       email = COALESCE($2, email),
+       bio = COALESCE($3, bio)
+     WHERE id = $4
+     RETURNING *`,
+    [name, email, bio, id]
+  );
+  return rows[0];
 }
 
-function remove(id) {
-  const index = authors.findIndex((author) => author.id === Number(id));
-  if (index === -1) return false;
-  authors.splice(index, 1);
-  return true;
+async function remove(id) {
+  const { rows } = await pool.query('DELETE FROM authors WHERE id = $1 RETURNING id', [id]);
+  return rows.length > 0;
 }
 
 module.exports = { findAll, findById, create, update, remove };

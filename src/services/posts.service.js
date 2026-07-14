@@ -1,43 +1,47 @@
-let posts = [
-  { id: 1, title: 'Introdução ao Node.js', content: 'Node.js é um runtime de JavaScript...', author_id: 1, published: true },
-  { id: 2, title: 'PostgreSQL vs MySQL', content: 'Ambos bancos de dados têm vantagens...', author_id: 2, published: true },
-  { id: 3, title: 'APIs RESTful', content: 'REST é um estilo arquitetural...', author_id: 1, published: false },
-];
-let nextId = 4;
+const { pool } = require('../config/dbConnect');
 
-function findAll() {
-  return posts;
+async function findAll() {
+  const { rows } = await pool.query('SELECT * FROM posts ORDER BY id');
+  return rows;
 }
 
-function findById(id) {
-  return posts.find((post) => post.id === Number(id));
+async function findById(id) {
+  const { rows } = await pool.query('SELECT * FROM posts WHERE id = $1', [id]);
+  return rows[0];
 }
 
-function findByAuthorId(authorId) {
-  return posts.filter((post) => post.author_id === Number(authorId));
+async function findByAuthorId(authorId) {
+  const { rows } = await pool.query('SELECT * FROM posts WHERE author_id = $1 ORDER BY id', [authorId]);
+  return rows;
 }
 
-function create({ title, content, author_id, published }) {
-  const newPost = { id: nextId++, title, content, author_id: Number(author_id), published: !!published };
-  posts.push(newPost);
-  return newPost;
+async function create({ title, content, author_id, published }) {
+  const { rows } = await pool.query(
+    `INSERT INTO posts (title, content, author_id, published)
+     VALUES ($1, $2, $3, $4)
+     RETURNING *`,
+    [title, content, author_id, !!published]
+  );
+  return rows[0];
 }
 
-function update(id, { title, content, author_id, published }) {
-  const post = findById(id);
-  if (!post) return null;
-  if (title !== undefined) post.title = title;
-  if (content !== undefined) post.content = content;
-  if (author_id !== undefined) post.author_id = Number(author_id);
-  if (published !== undefined) post.published = !!published;
-  return post;
+async function update(id, { title, content, author_id, published }) {
+  const { rows } = await pool.query(
+    `UPDATE posts SET
+       title = COALESCE($1, title),
+       content = COALESCE($2, content),
+       author_id = COALESCE($3, author_id),
+       published = COALESCE($4, published)
+     WHERE id = $5
+     RETURNING *`,
+    [title, content, author_id, published, id]
+  );
+  return rows[0];
 }
 
-function remove(id) {
-  const index = posts.findIndex((post) => post.id === Number(id));
-  if (index === -1) return false;
-  posts.splice(index, 1);
-  return true;
+async function remove(id) {
+  const { rows } = await pool.query('DELETE FROM posts WHERE id = $1 RETURNING id', [id]);
+  return rows.length > 0;
 }
 
 module.exports = { findAll, findById, findByAuthorId, create, update, remove };
