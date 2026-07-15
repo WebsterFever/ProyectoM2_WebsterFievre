@@ -1,57 +1,57 @@
 # API MiniBlog
 
-API REST para gestão de **authors** e **posts** de um blog, construída com Node.js +
-Express e persistência em PostgreSQL. Um author pode ter vários posts (relação 1:N via
-`author_id`, com `ON DELETE CASCADE`).
+API REST para gestión de **authors** y **posts** de un blog, construida con Node.js +
+Express y persistencia en PostgreSQL. Un author puede tener varios posts (relación 1:N
+vía `author_id`, con `ON DELETE CASCADE`).
 
 Stack: Node.js, Express, PostgreSQL (`pg`), Vitest + Supertest, Swagger UI (OpenAPI 3.0),
-deploy no Railway.
+deploy en Railway.
 
 - **Deploy público**: https://proyectom2websterfievre-production.up.railway.app
-- **Documentação interativa (Swagger UI)**: https://proyectom2websterfievre-production.up.railway.app/docs
+- **Documentación interactiva (Swagger UI)**: https://proyectom2websterfievre-production.up.railway.app/docs
 
-> O roteiro de desenvolvimento passo a passo do projeto está em [`BlogDoc.md`](./BlogDoc.md).
-> Este README documenta o resultado final: como rodar, testar e fazer deploy.
+> El roteiro de desarrollo paso a paso del proyecto está en [`BlogDoc.md`](./BlogDoc.md).
+> Este README documenta el resultado final: cómo ejecutar, testear y desplegar.
 
 ---
 
 ## Requisitos
 
-- [Node.js](https://nodejs.org/) 18 ou superior
-- [PostgreSQL](https://www.postgresql.org/) 13 ou superior (local ou remoto)
-- npm (vem junto com o Node.js)
+- [Node.js](https://nodejs.org/) 18 o superior
+- [PostgreSQL](https://www.postgresql.org/) 13 o superior (local o remoto)
+- npm (viene junto con Node.js)
 
 ---
 
-## Como rodar localmente
+## Cómo ejecutar localmente
 
-1. Clone o repositório e instale as dependências:
+1. Clona el repositorio e instala las dependencias:
 
    ```bash
-   git clone <url-do-repositorio>
+   git clone <url-del-repositorio>
    cd miniBlogAPI
    npm install
    ```
 
-2. Crie o banco de dados no seu Postgres local (se ainda não existir):
+2. Crea la base de datos en tu Postgres local (si todavía no existe):
 
    ```bash
    createdb miniblogapi
    ```
 
-3. Rode o script de setup para criar as tabelas (`authors` e `posts`) e, opcionalmente,
-   o seed com dados de exemplo:
+3. Ejecuta el script de setup para crear las tablas (`authors` y `posts`) y,
+   opcionalmente, el seed con datos de ejemplo:
 
    ```bash
    psql -d miniblogapi -f sql/setup.sql
-   psql -d miniblogapi -f sql/seed.sql   # opcional, dados de exemplo
+   psql -d miniblogapi -f sql/seed.sql   # opcional, datos de ejemplo
    ```
 
-   > O servidor também cria as tabelas automaticamente na primeira execução, caso ainda
-   > não existam (`src/config/initDb.js`). Rodar `sql/setup.sql` manualmente é útil para
-   > conferir a modelagem antes de subir a API.
+   > El servidor también crea las tablas automáticamente en la primera ejecución, si
+   > todavía no existen (`src/config/initDb.js`). Ejecutar `sql/setup.sql` manualmente
+   > es útil para revisar el modelado antes de levantar la API.
 
-4. Copie o `.env.example` para `.env` e preencha com os dados do seu Postgres local:
+4. Copia `.env.example` a `.env` y completá con los datos de tu Postgres local:
 
    ```bash
    cp .env.example .env
@@ -64,36 +64,36 @@ deploy no Railway.
    DB_PORT=5432
    DB_NAME=miniblogapi
    DB_USER=postgres
-   DB_PASSWORD=sua_senha_local
+   DB_PASSWORD=tu_contraseña_local
    DB_MAX_CONNECT=20
    DB_IDLETIMEOUT=30000
    DB_CONNECTIONTIMEOUT=2000
    ```
 
-   | Variável | Para que serve |
+   | Variable | Para qué sirve |
    |---|---|
-   | `PORT` | Porta em que o Express sobe |
-   | `DB_HOST` | Host do Postgres |
-   | `DB_PORT` | Porta do Postgres |
-   | `DB_NAME` | Nome do banco/database |
-   | `DB_USER` | Usuário do Postgres |
-   | `DB_PASSWORD` | Senha do Postgres |
-   | `DB_MAX_CONNECT` | Máximo de conexões simultâneas do pool (`pg.Pool`) |
-   | `DB_IDLETIMEOUT` | Tempo (ms) que uma conexão ociosa fica aberta antes de fechar |
-   | `DB_CONNECTIONTIMEOUT` | Tempo (ms) que o pool espera por uma conexão livre antes de desistir |
+   | `PORT` | Puerto en el que corre Express |
+   | `DB_HOST` | Host del Postgres |
+   | `DB_PORT` | Puerto del Postgres |
+   | `DB_NAME` | Nombre de la base de datos |
+   | `DB_USER` | Usuario del Postgres |
+   | `DB_PASSWORD` | Contraseña del Postgres |
+   | `DB_MAX_CONNECT` | Máximo de conexiones simultáneas del pool (`pg.Pool`) |
+   | `DB_IDLETIMEOUT` | Tiempo (ms) que una conexión ociosa queda abierta antes de cerrarse |
+   | `DB_CONNECTIONTIMEOUT` | Tiempo (ms) que el pool espera por una conexión libre antes de desistir |
 
-   O `.env` **nunca** é commitado (está no `.gitignore`) — só o `.env.example`, sem
-   valores reais, serve de referência.
+   El `.env` **nunca** se commitea (está en `.gitignore`) — solo `.env.example`, sin
+   valores reales, sirve de referencia.
 
-5. Suba o servidor:
+5. Levanta el servidor:
 
    ```bash
-   npm run dev    # com reload automático (nodemon)
-   # ou
-   npm start      # sem reload
+   npm run dev    # con reload automático (nodemon)
+   # o
+   npm start      # sin reload
    ```
 
-   A API sobe em `http://localhost:3000`.
+   La API queda disponible en `http://localhost:3000`.
 
 ---
 
@@ -114,80 +114,82 @@ PUT    /posts/:id
 DELETE /posts/:id
 ```
 
-Detalhes completos de request/response, status codes e schemas: ver seção
-[Documentação OpenAPI](#documentação-openapi).
+Detalles completos de request/response, status codes y schemas: ver sección
+[Documentación OpenAPI](#documentación-openapi).
 
 ---
 
-## Como rodar os testes
+## Cómo ejecutar los tests
 
 ```bash
 npm test
 ```
 
-Roda a suíte com [Vitest](https://vitest.dev/):
+Ejecuta la suite con [Vitest](https://vitest.dev/):
 
-- **Testes unitários** dos middlewares de validação (`tests/validateAuthorBody.test.js`,
-  `tests/validatePostBody.test.js`, `tests/validateIdParam.test.js`) — não dependem de
-  banco de dados nem do servidor HTTP.
-- **Testes de integração** com [Supertest](https://github.com/ladjs/supertest)
-  (`tests/authors.integration.test.js`, `tests/posts.integration.test.js`) — sobem a
-  aplicação Express de verdade e usam o Postgres configurado no `.env`. Limpam os dados
-  que criam ao final (`afterAll`) e usam valores únicos (ex: email com timestamp), então
-  rodar `npm test` várias vezes seguidas não quebra por dados duplicados.
+- **Tests unitarios** de los middlewares de validación (`tests/validateAuthorBody.test.js`,
+  `tests/validatePostBody.test.js`, `tests/validateIdParam.test.js`) — no dependen de la
+  base de datos ni del servidor HTTP.
+- **Tests de integración** con [Supertest](https://github.com/ladjs/supertest)
+  (`tests/authors.integration.test.js`, `tests/posts.integration.test.js`) — levantan la
+  aplicación Express real y usan el Postgres configurado en `.env`. Limpian los datos que
+  crean al final (`afterAll`) y usan valores únicos (ej: email con timestamp), así que
+  ejecutar `npm test` varias veces seguidas no falla por datos duplicados.
 
-> Os testes de integração precisam de um Postgres acessível via `.env` (local ou
-> remoto) com as tabelas já criadas (passo 3 do setup local).
-
----
-
-## Documentação OpenAPI
-
-A spec (OpenAPI 3.0) está definida como objeto JS em `src/config/swagger.js` e é servida
-como documentação interativa via Swagger UI:
-
-- **Local**: com o servidor rodando, acesse `http://localhost:3000/docs`
-- **Produção**: https://proyectom2websterfievre-production.up.railway.app/docs
+> Los tests de integración necesitan un Postgres accesible vía `.env` (local o remoto)
+> con las tablas ya creadas (paso 3 del setup local).
 
 ---
 
-## Deploy no Railway
+## Documentación OpenAPI
 
-1. Crie uma conta em [railway.app](https://railway.app) e um novo projeto.
-2. Adicione um serviço **PostgreSQL** ao projeto — o Railway provisiona o banco e expõe
-   suas próprias variáveis de conexão (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`,
-   `PGPASSWORD`, `DATABASE_URL`, `DATABASE_PUBLIC_URL`, etc.) na aba **Variables** do
-   serviço Postgres.
-3. Adicione um segundo serviço a partir do repositório GitHub do miniBlogAPI (deploy via
-   Git).
-4. No serviço da API, defina a variável `DATABASE_URL` referenciando a **internal URL**
-   do Postgres do Railway (formato `postgresql://usuario:senha@postgres.railway.internal:5432/railway`).
-   Use uma **Variable Reference** do próprio Railway (`${{Postgres.DATABASE_URL}}`) em
-   vez de copiar o valor manualmente — assim a variável se atualiza sozinha se a senha
-   do banco rotacionar.
-   - A internal URL (`*.railway.internal`) só funciona para comunicação **entre serviços
-     dentro do mesmo projeto Railway** — é a que a API deve usar.
-   - A `DATABASE_PUBLIC_URL` (via proxy `*.proxy.rlwy.net`) expõe o banco para acesso
-     externo (ex: conectar com um client de Postgres da sua máquina) e não deve ser
-     usada pela própria API.
-   - Quando `DATABASE_URL` está definida, `src/config/dbConnect.js` usa ela diretamente
-     como `connectionString`; as variáveis `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/
-     `DB_PASSWORD` (usadas no ambiente local) ficam sem efeito.
-   - Não defina `PORT` manualmente: o Railway injeta a sua própria porta e o `index.js`
-     já usa `process.env.PORT`.
-5. O Railway builda e executa `npm start` automaticamente a partir do `package.json`.
-6. Depois do deploy, pegue a **public URL** da API gerada pelo Railway (Settings →
-   Networking → Generate Domain) e teste os endpoints, ex:
+La spec (OpenAPI 3.0) está definida como objeto JS en `src/config/swagger.js` y se sirve
+como documentación interactiva vía Swagger UI:
+
+- **Local**: con el servidor corriendo, entra a `http://localhost:3000/docs`
+- **Producción**: https://proyectom2websterfievre-production.up.railway.app/docs
+
+---
+
+## Deploy en Railway
+
+1. Crea una cuenta en [railway.app](https://railway.app) y un nuevo proyecto.
+2. Agrega un servicio **PostgreSQL** al proyecto — Railway provisiona la base de datos
+   y expone sus propias variables de conexión (`PGHOST`, `PGPORT`, `PGDATABASE`,
+   `PGUSER`, `PGPASSWORD`, `DATABASE_URL`, `DATABASE_PUBLIC_URL`, etc.) en la pestaña
+   **Variables** del servicio Postgres.
+3. Agrega un segundo servicio a partir del repositorio GitHub de miniBlogAPI (deploy
+   vía Git).
+4. En el servicio de la API, define la variable `DATABASE_URL` referenciando la
+   **internal URL** del Postgres de Railway (formato
+   `postgresql://usuario:contraseña@postgres.railway.internal:5432/railway`).
+   Usa una **Variable Reference** del propio Railway (`${{Postgres.DATABASE_URL}}`) en
+   vez de copiar el valor manualmente — así la variable se actualiza sola si la
+   contraseña de la base rota.
+   - La internal URL (`*.railway.internal`) solo funciona para comunicación **entre
+     servicios dentro del mismo proyecto Railway** — es la que debe usar la API.
+   - La `DATABASE_PUBLIC_URL` (vía proxy `*.proxy.rlwy.net`) expone la base de datos
+     para acceso externo (ej: conectarte con un client de Postgres desde tu máquina) y
+     no debe usarla la propia API.
+   - Cuando `DATABASE_URL` está definida, `src/config/dbConnect.js` la usa directamente
+     como `connectionString`; las variables `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/
+     `DB_PASSWORD` (usadas en el ambiente local) quedan sin efecto.
+   - No definas `PORT` manualmente: Railway inyecta su propio puerto y `index.js` ya
+     usa `process.env.PORT`.
+5. Railway builda y ejecuta `npm start` automáticamente a partir del `package.json`.
+6. Después del deploy, obtén la **public URL** de la API generada por Railway
+   (Settings → Networking → Generate Domain) y prueba los endpoints, ej:
    - `https://proyectom2websterfievre-production.up.railway.app/authors`
    - `https://proyectom2websterfievre-production.up.railway.app/docs`
 
-> **Segurança**: nunca commite valores reais de `DATABASE_URL`, senhas ou outras
-> credenciais no repositório ou em capturas de tela compartilhadas — se uma credencial
-> vazar, rotacione-a na aba Variables do serviço Postgres no Railway.
+> **Seguridad**: nunca commitees valores reales de `DATABASE_URL`, contraseñas u otras
+> credenciales en el repositorio ni en capturas de pantalla compartidas — si una
+> credencial se filtra, rótala en la pestaña Variables del servicio Postgres en
+> Railway.
 
 ---
 
 ## Registro de uso de IA
 
-Ver [`BlogDoc.md`](./BlogDoc.md#ai-usage-log) para o registro de prompts
-utilizados durante o desenvolvimento.
+Ver [`BlogDoc.md`](./BlogDoc.md#ai-usage-log) para el registro de prompts utilizados
+durante el desarrollo.
