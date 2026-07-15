@@ -82,12 +82,12 @@ const swaggerSpec = {
     version: '1.0.0',
     description: 'API REST para gestão de authors e posts (Projeto Integrador).',
   },
-servers: [
-  {
-    url: '/',
-    description: 'Servidor atual',
-  },
-],
+  servers: [
+    {
+      url: '/',
+      description: 'Servidor atual',
+    },
+  ],
   paths: {
     '/authors': {
       get: {
