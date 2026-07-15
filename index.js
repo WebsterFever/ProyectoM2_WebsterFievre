@@ -1,8 +1,7 @@
 const { pool } = require('./src/config/dbConnect');
 const { initializeDatabase } = require('./src/config/initDb');
 const app = require('./src/app');
-
-const PORT = process.env.PORT || 3000;
+const { PORT } = require('./src/config/envs');
 
 const startServer = async () => {
   await pool.query('SELECT 1');
