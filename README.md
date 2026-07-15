@@ -158,8 +158,6 @@ como documentación interactiva vía Swagger UI:
    y expone sus propias variables de conexión (`PGHOST`, `PGPORT`, `PGDATABASE`,
    `PGUSER`, `PGPASSWORD`, `DATABASE_URL`, `DATABASE_PUBLIC_URL`, etc.) en la pestaña
    **Variables** del servicio Postgres.
-
-   DATABASE_URL : postgresql://postgres:uThqbnXPkZArNJYsCvrcLbFhNEPxCXao@postgres.railway.internal:5432/railway
 3. Agrega un segundo servicio a partir del repositorio GitHub de miniBlogAPI (deploy
    vía Git).
 4. En el servicio de la API, define la variable `DATABASE_URL` referenciando la
@@ -193,5 +191,18 @@ como documentación interactiva vía Swagger UI:
 
 ## Registro de uso de IA
 
-Ver [`BlogDoc.md`](./BlogDoc.md#ai-usage-log) para el registro de prompts utilizados
-durante el desarrollo.
+Ver también [`BlogDoc.md`](./BlogDoc.md#ai-usage-log) para la plantilla del registro.
+Algunos de los prompts usados con Claude Code durante esta etapa de documentación:
+
+| Prompt | Cómo influyó en el proyecto |
+|---|---|
+| "Necesito `.env.example` y README con pasos para ejecutar local y desplegar; tests unitarios mínimos y comando para ejecutarlos; archivo OpenAPI (YAML/JSON); carpeta Documentación con README (descripción, requisitos, cómo correr tests, cómo ver OpenAPI, guía de deployment en Railway)." | Se restauró `README.md` en la raíz (había sido borrado) cubriendo todos esos puntos. Antes de escribir nada se revisó el código existente y se confirmó que `.env.example`, los tests y Swagger UI ya estaban implementados, así que no se recrearon desde cero. |
+| "translate my blogdoc in english" | Se tradujo `BlogDoc.md` completo al inglés manteniendo la misma estructura (headings, tablas, bloques de código), y se corrigió el link ancla en `README.md` que apuntaba a la sección en portugués. |
+| "verify if all this has been implement [captura de la rúbrica]" | Se revisó cada categoría de la rúbrica contra el código real (controllers, services, middlewares, tests), se corrieron los 27 tests contra Postgres local y se probaron los endpoints del deploy en producción (Railway) en vivo, no solo leyendo el código. |
+| "mi reademe tiene que estar en esoanol" | Se reescribió `README.md` completo en español (antes estaba en portugués). |
+| "si o no piensas que mi aplcacion respecta todo en este miniblog [captura de la rúbrica]" | Se comparó cada fila de la rúbrica con la evidencia ya verificada y se identificó una brecha real: falta un archivo OpenAPI estático (YAML/JSON) separado del Swagger UI interactivo, que la rúbrica pide explícitamente en la fila de Documentación. |
+
+> Este registro no es exhaustivo — quedan afuera los prompts usados en etapas
+> anteriores del desarrollo (armado de rutas, servicios, validaciones, etc.). Se
+> recomienda completarlo a medida que se sigan usando herramientas de IA en el
+> proyecto.
