@@ -82,14 +82,12 @@ const swaggerSpec = {
     version: '1.0.0',
     description: 'API REST para gestão de authors e posts (Projeto Integrador).',
   },
-  servers: [
-    {
-      url:
-        process.env.NODE_ENV === 'production'
-          ? 'https://proyectom2webstersfievre-production.up.railway.app'
-          : 'http://localhost:3000',
-    },
-  ],
+servers: [
+  {
+    url: '/',
+    description: 'Servidor atual',
+  },
+],
   paths: {
     '/authors': {
       get: {
