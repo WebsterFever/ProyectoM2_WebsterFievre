@@ -158,6 +158,8 @@ como documentación interactiva vía Swagger UI:
    y expone sus propias variables de conexión (`PGHOST`, `PGPORT`, `PGDATABASE`,
    `PGUSER`, `PGPASSWORD`, `DATABASE_URL`, `DATABASE_PUBLIC_URL`, etc.) en la pestaña
    **Variables** del servicio Postgres.
+
+   DATABASE_URL : postgresql://postgres:uThqbnXPkZArNJYsCvrcLbFhNEPxCXao@postgres.railway.internal:5432/railway
 3. Agrega un segundo servicio a partir del repositorio GitHub de miniBlogAPI (deploy
    vía Git).
 4. En el servicio de la API, define la variable `DATABASE_URL` referenciando la
